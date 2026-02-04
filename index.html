@@ -11,7 +11,9 @@
     <!-- iOS 支援 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMTAwIDEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0NSIgZmlsbD0iI2ZmZjdkZCIvPjxwYXRoIGQ9Ik01MCA4NWMtMjAgMC0zNS0xMi0zNS0yNSAwLTggMTAtMTUgMTUtMTggMi01IDgtMTUgMjAtMTUgMTUgMCAyMCAxMCAyMCAxOCAxMCA1IDE1IDEyIDE1IDIwIDAgMTMtMTUgMjUtMzUgMjV6IiBmaWxsPSIjNzgzNTBZiLz48Y2lyY2xlIGN4PSI0MCIgY3k9IjQ1IiByPSI1IiBmaWxsPSJ3aGl0ZSIvPjxjaXJjbGUgY3g9IjYwIiBjeT0iNDUiIHI9IjUiIGZpbGw9IndoaXRlIi8+PHBhdGggZD0iTTQyIDY1czQgNCA4IDQgOC00IDgtNCIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIzIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48cGF0aCBkPSJNMjUgMzBsLTUtNU03NSAzMGw1LTVNNTAgMjBWMTIiIHN0cm9rZT0iIzc4MzUwZiIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48L3N2Zz4=">
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#0d9488">
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -134,39 +136,14 @@
     <div id="toast" class="fixed top-6 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white px-8 py-3 rounded-xl shadow-2xl z-50 font-bold border border-slate-700 hidden"></div>
 
     <script>
-        // --- PWA 動態 Manifest 處理 ---
-        function initPWA() {
-            const logoBase64 = "PHN2ZyB2aWV3Qm94PSIwIDAgMTAwIDEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0NSIgZmlsbD0iI2ZmZjdkZCIvPjxwYXRoIGQ9Ik01MCA4NWMtMjAgMC0zNS0xMi0zNS0yNSAwLTggMTAtMTUgMTUtMTggMi01IDgtMTUgMjAtMTUgMTUgMCAyMCAxMCAyMCAxOCAxMCA1IDE1IDEyIDE1IDIwIDAgMTMtMTUgMjUtMzUgMjV6IiBmaWxsPSIjNzgzNTBZiLz48Y2lyY2xlIGN4PSI0MCIgY3k9IjQ1IiByPSI1IiBmaWxsPSJ3aGl0ZSIvPjxjaXJjbGUgY3g9IjYwIiBjeT0iNDUiIHI9IjUiIGZpbGw9IndoaXRlIi8+PHBhdGggZD0iTTQyIDY1czQgNCA4IDQgOC00IDgtNCIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIzIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48cGF0aCBkPSJNMjUgMzBsLTUtNU03NSAzMGw1LTVNNTAgMjBWMTIiIHN0cm9rZT0iIzc4MzUwZiIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48L3N2Zz4=";
-            const manifest = {
-                "name": "排便日記",
-                "short_name": "排便日記",
-                "start_url": ".",
-                "display": "standalone",
-                "background_color": "#ffffff",
-                "theme_color": "#0d9488",
-                "icons": [
-                    {
-                        "src": "data:image/svg+xml;base64," + logoBase64,
-                        "sizes": "192x192",
-                        "type": "image/svg+xml",
-                        "purpose": "any"
-                    },
-                    {
-                        "src": "data:image/svg+xml;base64," + logoBase64,
-                        "sizes": "512x512",
-                        "type": "image/svg+xml",
-                        "purpose": "any"
-                    }
-                ]
-            };
-            const stringManifest = JSON.stringify(manifest);
-            const blob = new Blob([stringManifest], {type: 'application/json'});
-            const manifestURL = URL.createObjectURL(blob);
-            const link = document.createElement('link');
-            link.rel = 'manifest';
-            link.href = manifestURL;
-            document.head.appendChild(link);
+        // --- PWA（方法A：實體 manifest + 圖示 + Service Worker）---
+        function registerServiceWorker() {
+            if (!("serviceWorker" in navigator)) return;
+            navigator.serviceWorker.register("./service-worker.js").catch((err) => {
+                console.warn("Service Worker 註冊失敗：", err);
+            });
         }
+
 
         // --- 狀態管理 ---
         let currentView = 'record';
@@ -180,10 +157,10 @@
         let medsList = JSON.parse(localStorage.getItem('poop_diary_meds')) || DEFAULT_MEDS;
         let sensationsList = JSON.parse(localStorage.getItem('poop_diary_sensations')) || DEFAULT_SENSATIONS;
 
-        let currentLogState = { status: '順暢', selectedMeds: [], selectedSensations: [], note: '' };
+        let currentLogState = { status: '順暢', poopTime: '', selectedMeds: [], selectedSensations: [], note: '' };
 
         window.onload = () => {
-            initPWA();
+            registerServiceWorker();
             loadLogData();
             switchView('record');
         };
@@ -219,12 +196,13 @@
             if (existing) {
                 currentLogState = {
                     status: existing.status || '順暢',
+                    poopTime: existing.poopTime || '',
                     selectedMeds: [...(existing.meds || [])],
                     selectedSensations: [...(existing.sensations || [])],
                     note: existing.note || ''
                 };
             } else {
-                currentLogState = { status: '順暢', selectedMeds: [], selectedSensations: [], note: '' };
+                currentLogState = { status: '順暢', poopTime: '', selectedMeds: [], selectedSensations: [], note: '' };
             }
         }
 
@@ -257,14 +235,25 @@
                     <section class="space-y-3">
                         <h3 class="text-base font-bold text-slate-800 flex items-center gap-2 px-1"><i data-lucide="activity" class="text-teal-600 w-5 h-5"></i> 臨床排便狀態</h3>
                         <div class="grid grid-cols-2 gap-3">
-                            ${['便秘', '順暢', '拉肚子', '多次排便'].map(s => `
+                            ${['便秘', '順暢', '拉肚子', '蹲很久'].map(s => `
                                 <button onclick="updateStatus('${s}')" class="py-4 px-4 rounded-xl border-2 transition-all text-base font-bold ${currentLogState.status === s ? 'bg-teal-600 border-teal-700 text-white shadow-lg' : 'bg-white border-slate-200 text-slate-600 active:bg-slate-100'}">
                                     ${s}
                                 </button>
                             `).join('')}
                         </div>
                     </section>
+                    
                     <section class="space-y-3">
+                        <h3 class="text-base font-bold text-slate-800 flex items-center gap-2 px-1"><i data-lucide="clock" class="text-teal-600 w-5 h-5"></i> 排便時間 <span class="text-xs font-black text-slate-400">(24小時制)</span></h3>
+                        <div class="bg-white p-4 rounded-xl shadow-md border border-slate-200">
+                            <div class="flex items-center gap-3">
+                                <input type="time" value="${currentLogState.poopTime || ''}" oninput="updatePoopTime(this.value)" class="flex-1 text-base font-bold bg-slate-50 border border-slate-200 rounded-xl p-4 outline-none focus:border-teal-500 shadow-inner" />
+                                <button onclick="setPoopTimeNow()" class="px-4 py-3 bg-slate-100 text-slate-700 rounded-xl border border-slate-200 font-black active:scale-95 transition-all whitespace-nowrap">現在</button>
+                            </div>
+                            <div class="text-xs text-slate-400 font-bold mt-2 ml-1">可不填；例如：07:30、21:05</div>
+                        </div>
+                    </section>
+<section class="space-y-3">
                         <h3 class="text-base font-bold text-slate-800 flex items-center gap-2 px-1"><i data-lucide="pill" class="text-teal-600 w-5 h-5"></i> 當日用藥紀錄</h3>
                         <div class="bg-white p-4 rounded-xl shadow-md border border-slate-200 grid grid-cols-2 gap-3">
                             ${medsList.length ? medsList.map(m => `
@@ -322,7 +311,7 @@
                                     <option value="便秘" ${historyFilter.status === '便秘' ? 'selected' : ''}>便秘</option>
                                     <option value="順暢" ${historyFilter.status === '順暢' ? 'selected' : ''}>順暢</option>
                                     <option value="拉肚子" ${historyFilter.status === '拉肚子' ? 'selected' : ''}>拉肚子</option>
-                                    <option value="多次排便" ${historyFilter.status === '多次排便' ? 'selected' : ''}>多次排便</option>
+                                    <option value="蹲很久" ${historyFilter.status === '蹲很久' ? 'selected' : ''}>蹲很久</option>
                                 </select>
                                 <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400"><i data-lucide="chevron-down" class="w-5 h-5"></i></div>
                             </div>
@@ -333,8 +322,17 @@
                         filteredLogs.map(log => `
                             <div class="bg-white p-5 rounded-xl shadow-md border border-slate-200 border-l-[6px] border-l-teal-600 relative">
                                 <button onclick="editLog('${log.date}')" class="absolute top-4 right-4 p-2 bg-slate-50 text-teal-600 rounded-lg border border-slate-100 hover:bg-teal-50 active:scale-90 transition-all shadow-sm flex items-center gap-1"><i data-lucide="edit-3" class="w-4 h-4"></i><span class="text-xs font-bold">修改</span></button>
-                                <div class="flex flex-col mb-3"><span class="font-black text-slate-800 text-lg">${log.date}</span><div class="mt-2"><span class="text-lg px-4 py-2 rounded-xl font-black uppercase inline-block ${log.status === '順暢' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">${log.status}</span></div></div>
-                                <div class="flex flex-wrap gap-2 mb-3 pr-16">${log.sensations.map(s => `<span class="text-xs bg-sky-50 text-sky-800 px-3 py-1 rounded-md border border-sky-200 font-bold">${s}</span>`).join('')}${log.meds.map(m => `<span class="text-xs bg-slate-100 text-slate-700 px-3 py-1 rounded-md border border-slate-300 font-bold">${m}</span>`).join('')}</div>
+                                <div class="flex flex-col mb-3">
+                                    <span class="font-black text-slate-800 text-lg">${log.date}</span>
+                                    <div class="mt-2 flex flex-wrap items-center gap-2">
+                                        <span class="text-lg px-4 py-2 rounded-xl font-black uppercase inline-block ${log.status === '順暢' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">${log.status}</span>
+                                        <span class="text-sm px-3 py-2 rounded-xl font-black bg-slate-100 text-slate-700 border border-slate-200 flex items-center gap-1">
+                                            <i data-lucide="clock" class="w-4 h-4"></i>
+                                            排便時間：${log.poopTime ? log.poopTime : '—'}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="flex flex-wrap gap-2 mb-3 pr-16">${(log.sensations || []).map(s => `<span class="text-xs bg-sky-50 text-sky-800 px-3 py-1 rounded-md border border-sky-200 font-bold">${s}</span>`).join('')}${(log.meds || []).map(m => `<span class="text-xs bg-slate-100 text-slate-700 px-3 py-1 rounded-md border border-slate-300 font-bold">${m}</span>`).join('')}</div>
                                 ${log.note ? `<div class="text-sm text-slate-600 bg-slate-50 p-3 rounded-lg border-l-4 border-slate-300 font-medium italic">“ ${log.note} ”</div>` : ''}
                             </div>
                         `).join('')}
@@ -390,7 +388,15 @@
         function toggleMed(m) { const idx = currentLogState.selectedMeds.indexOf(m); if (idx > -1) currentLogState.selectedMeds.splice(idx, 1); else currentLogState.selectedMeds.push(m); renderRecord(); }
         function toggleSensation(s) { const idx = currentLogState.selectedSensations.indexOf(s); if (idx > -1) currentLogState.selectedSensations.splice(idx, 1); else currentLogState.selectedSensations.push(s); renderRecord(); }
         function updateNote(val) { currentLogState.note = val; }
-        function saveCurrentLog() { const newLog = { date: currentDate, status: currentLogState.status, meds: [...currentLogState.selectedMeds], sensations: [...currentLogState.selectedSensations], note: currentLogState.note, timestamp: new Date().getTime() }; logs = logs.filter(l => l.date !== currentDate); logs.push(newLog); logs.sort((a, b) => b.date.localeCompare(a.date)); saveToLocal(); showToast("✅ 紀錄已成功儲存"); }
+        function updatePoopTime(val) { currentLogState.poopTime = val; }
+        function setPoopTimeNow() {
+            const now = new Date();
+            const hh = String(now.getHours()).padStart(2, '0');
+            const mm = String(now.getMinutes()).padStart(2, '0');
+            currentLogState.poopTime = `${hh}:${mm}`;
+            renderRecord();
+        }
+        function saveCurrentLog() { const newLog = { date: currentDate, status: currentLogState.status, poopTime: currentLogState.poopTime || '', meds: [...currentLogState.selectedMeds], sensations: [...currentLogState.selectedSensations], note: currentLogState.note, timestamp: new Date().getTime() }; logs = logs.filter(l => l.date !== currentDate); logs.push(newLog); logs.sort((a, b) => b.date.localeCompare(a.date)); saveToLocal(); showToast("✅ 紀錄已成功儲存"); }
         function addItem(type) { const input = document.getElementById(type === 'med' ? 'new-med' : 'new-sensation'); const val = input.value.trim(); if (!val) return; if (type === 'med') medsList.push(val); else sensationsList.push(val); saveToLocal(); input.value = ''; if (type === 'med') renderMedsSettings(); else renderSensationsSettings(); }
         function removeItem(type, index) { if (type === 'med') medsList.splice(index, 1); else sensationsList.splice(index, 1); saveToLocal(); if (type === 'med') renderMedsSettings(); else renderSensationsSettings(); }
     </script>
